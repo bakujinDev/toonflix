@@ -1,13 +1,67 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class TimerScreen extends StatefulWidget {
+  const TimerScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<TimerScreen> createState() => _TimerScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _TimerScreenState extends State<TimerScreen> {
+  static const int settingTime = 1500;
+
+  int totalSeconds = settingTime;
+  bool isRunning = false;
+  int totalPomodoros = 0;
+  late Timer timer;
+
+  void onTick(Timer timer) {
+    setState(() {
+      totalSeconds--;
+    });
+
+    if (totalSeconds < 1) {
+      onPausePressed();
+
+      setState(() {
+        totalPomodoros++;
+      });
+    }
+  }
+
+  void onStartPressed() {
+    timer = Timer.periodic(
+      const Duration(seconds: 1),
+      onTick,
+    );
+
+    setState(() {
+      isRunning = true;
+    });
+  }
+
+  void onPausePressed() {
+    timer.cancel();
+
+    setState(() {
+      isRunning = false;
+    });
+  }
+
+  void onStopPressed() {
+    onPausePressed();
+
+    setState(() {
+      totalSeconds = settingTime;
+    });
+  }
+
+  String format(int seconds) {
+    var duration = Duration(seconds: seconds);
+    return '${duration.inMinutes.toString().padLeft(2, '0')}:${duration.inSeconds.remainder(60).toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               alignment: Alignment.bottomCenter,
               child: Text(
-                '25:00',
+                format(totalSeconds),
                 style: TextStyle(
                   fontSize: 89,
                   fontWeight: FontWeight.w600,
@@ -30,13 +84,24 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Flexible(
             flex: 3,
-            child: Center(
-              child: IconButton(
-                icon: const Icon(Icons.play_circle_outline_rounded),
-                iconSize: 120,
-                color: Theme.of(context).cardColor,
-                onPressed: () {},
-              ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: isRunning ? onPausePressed : onStartPressed,
+                  icon: Icon(isRunning
+                      ? Icons.pause_circle_outline_rounded
+                      : Icons.play_circle_outline_rounded),
+                  iconSize: 120,
+                  color: Theme.of(context).cardColor,
+                ),
+                IconButton(
+                  onPressed: onStopPressed,
+                  icon: const Icon(Icons.stop_circle_outlined),
+                  iconSize: 120,
+                  color: Theme.of(context).cardColor,
+                )
+              ],
             ),
           ),
           Flexible(
@@ -45,8 +110,10 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: Container(
-                    decoration:
-                        BoxDecoration(color: Theme.of(context).cardColor),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(50),
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -59,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         Text(
-                          '0',
+                          '$totalPomodoros',
                           style: TextStyle(
                             fontSize: 60,
                             fontWeight: FontWeight.w600,
